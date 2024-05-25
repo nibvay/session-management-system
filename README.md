@@ -3,7 +3,7 @@
 ## How to start the project
 
 ```bash
-$ git clone xxx
+$ git clone https://github.com/nibvay/session-management-system.git
 
 # run client
 $ cd client
@@ -11,6 +11,9 @@ $ npm install
 $ npm run dev
 
 # run server
+$ cd server
+$ go mod tidy
+$ go run main.go
 
 ```
 
@@ -36,7 +39,6 @@ $ npm run dev
       "name": "John",
       "uniqueNum": "b8b5105a-51df-47c8-a611-77c9ef6aaddb"
     }
-    // ...
   ]
   ```
 
@@ -54,7 +56,6 @@ $ npm run dev
       "date": 1716739200000,
       "classroom": "B"
     }
-    // ...
   ]
   ```
 
@@ -83,7 +84,6 @@ $ npm run dev
       "name": "James",
       "uniqueNum": "e681fa48-46e4-4773-8f0c-083618b9ba80"
     }
-    // ...
   ]
   ```
 
@@ -109,11 +109,10 @@ $ npm run dev
       "date": 1716739200000,
       "classroom": "B"
     }
-    // ...
   ]
   ```
 
-### POST /attendee/{attendee}/session
+### POST /attendee/{attendeeId}/session
 
 - Register a specific attendee for a session
 - Request

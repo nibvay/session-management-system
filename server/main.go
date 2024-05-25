@@ -34,5 +34,4 @@ func main() {
 	routes.RegisterAttendeeRoutes(app)
 
 	log.Fatal(app.Listen(":4000"))
-	fmt.Println("Server start on port 4000")
 }
