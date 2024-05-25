@@ -30,20 +30,4 @@ export function isSameDay(t1, t2) {
   );
 }
 
-export function generateFakeSessions(count) {
-  const titles = ["MySQL", "Postgres", "Mongodb"];
-  const timeSlots = ["morning", "afternoon"];
-  const randomTimeSlot = timeSlots[Math.floor(Math.random() * timeSlots.length)];
-  const date = getThisWeek();
-
-  return [...new Array(count)].map((_, index) => {
-    return {
-      id: Math.floor(Math.random() * 10000),
-      title: titles[Math.floor(Math.random() * titles.length)],
-      date: date[index],
-      timeSlot: randomTimeSlot,
-    };
-  });
-}
-
 export const timeFormatter = new Intl.DateTimeFormat("en-US", { month: "numeric", day: "2-digit" });

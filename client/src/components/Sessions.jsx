@@ -135,7 +135,7 @@ function SessionItem({ sessionList, timeSlot, date, classroom, handleCreateClick
   return (
     <div className="flex gap-1">
       <span>{target.title}</span>
-      <EditButton />
+      {/* <EditButton /> */}
     </div>
   );
 }
