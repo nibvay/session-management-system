@@ -48,7 +48,7 @@
 ]
 ```
 
-#### POST /speaker
+#### (optional)POST /speaker
 
 - create a speaker
 - request

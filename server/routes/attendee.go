@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"session-management-system/db"
 	"session-management-system/models"
 
@@ -108,8 +107,5 @@ func AttendeeJoinSession(c *fiber.Ctx) error {
 		AttendeeId: attendeeId,
 		SessionId:  sessionId,
 	})
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": fmt.Sprintf("attendee: %s joined to the session: %s", attendeeId, sessionId),
-	})
-
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "success"})
 }
