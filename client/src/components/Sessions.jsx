@@ -1,83 +1,68 @@
 import { useEffect, useState } from "react";
-import { getThisWeek, isSameDay } from "../utility";
+import { getThisWeek, isSameDay, timeFormatter } from "../utility";
 import http from "../http";
 import { useDialog } from "../provider/DialogProvider";
 import Dropdown from "./Dropdown";
 
-const timeFormatter = new Intl.DateTimeFormat("en-US", { month: "numeric", day: "2-digit" });
-
-function CreateSessionDialog({ setDialogData, speakerList }) {
-  const [speaker, setSpeaker] = useState(null);
-  const [session, setSession] = useState(null);
-
-  return (
-    <div>
-      <Dropdown
-        title="Session"
-        options={["MySQL", "Postgres", "Mongodb"].map((value) => ({
-          key: value,
-          display: value,
-          value,
-        }))}
-        value={session}
-        onChange={(value) => {
-          setSession(value);
-          setDialogData({ speaker, session: value });
-        }}
-      />
-      <Dropdown
-        title="Speaker"
-        options={speakerList.map(({ uniqueNum, name }) => ({
-          key: uniqueNum,
-          display: `${uniqueNum} ${name}`,
-          value: uniqueNum,
-        }))}
-        value={speaker}
-        onChange={(value) => {
-          setSpeaker(value);
-          setDialogData({ speaker: value, session });
-        }}
-      />
-    </div>
-  );
-}
+const SESSION_TITLE = ["MySQL", "Postgres", "Mongodb"];
 
 function Sessions() {
   const [sessionList, setSessionList] = useState([]);
   const [speakerList, setSpeakerList] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const dateList = getThisWeek();
   const tableDateList = dateList.map((d) => [d, d]).flat();
 
   const { openDialog, setDialogData } = useDialog();
 
   const handleCreateClick = ({ date, timeSlot, classroom }) => {
+    // In the same time slot, a speaker can participate in only one session.
+    const notAvailableSpeakerIds = sessionList
+      .filter(({ timeSlot: t, date: d }) => timeSlot === t && date === d)
+      .map(({ speakerId }) => speakerId);
+    const availableSpeakerList = speakerList.filter(({ id }) => !notAvailableSpeakerIds.includes(id));
+
     openDialog(
-      `Create Session on ${timeFormatter.format(date)} (${timeSlot}) in room: ${classroom}`,
-      <CreateSessionDialog speakerList={speakerList} setDialogData={setDialogData} />,
-      (dialogData) => {
+      "Create Session",
+      <CreateSessionDialog
+        date={date}
+        timeSlot={timeSlot}
+        classroom={classroom}
+        speakerList={availableSpeakerList}
+        setDialogData={setDialogData}
+      />,
+      async (dialogData) => {
         console.log({ dialogData });
+        await http.createSession({
+          title: dialogData.session,
+          timeSlot,
+          date,
+          speakerId: dialogData.speaker,
+          classroom,
+        });
+        const { data: sessions } = await http.getSessions();
+        setSessionList(sessions);
       }
     );
   };
 
   useEffect(() => {
     async function fetchData() {
-      setIsLoading(true);
-      const sessions = await http.getSessions();
-      const speakers = await http.getSpeakers();
+      // setIsLoading(true);
+      const { data: sessions } = await http.getSessions();
+      const { data: speakers } = await http.getSpeakers();
       setSessionList(sessions);
       setSpeakerList(speakers);
-      setIsLoading(false);
+      // setIsLoading(false);
     }
     fetchData();
   }, []);
 
-  if (isLoading) return <div>loading...</div>;
+  // if (isLoading) return <div>loading...</div>;
   return (
     <>
-      <div className="text-lg">Sessions</div>
-      <div className="p-6">
+      <div className="text-2xl text-gray-800 font-bold pb-2 mb-4 tracking-wide">Sessions</div>
+      <div className="p-6 max-w-95 overflow-x-scroll">
         <table className="min-w-full border-collapse border border-gray-200">
           <thead>
             <tr>
@@ -151,6 +136,50 @@ function SessionItem({ sessionList, timeSlot, date, classroom, handleCreateClick
     <div className="flex gap-1">
       <span>{target.title}</span>
       <EditButton />
+    </div>
+  );
+}
+
+function CreateSessionDialog({ date, timeSlot, classroom, setDialogData, speakerList }) {
+  const [speaker, setSpeaker] = useState(speakerList[0].id || undefined);
+  const [session, setSession] = useState(SESSION_TITLE[0] || undefined);
+
+  useEffect(() => {
+    setDialogData({ speaker, session });
+  }, []);
+
+  return (
+    <div className="flex flex-col">
+      <label className="block text-sm font-medium text-gray-700">{`Date: ${timeFormatter.format(
+        date
+      )} (${timeSlot})`}</label>
+      <label className="mt-4 block text-sm font-medium text-gray-700">{`Classroom: ${classroom}`}</label>
+      <Dropdown
+        title="Session"
+        options={SESSION_TITLE.map((value) => ({
+          key: value,
+          display: value,
+          value,
+        }))}
+        value={session}
+        onChange={(value) => {
+          setSession(value);
+          setDialogData({ speaker, session: value });
+        }}
+      />
+      <Dropdown
+        title="Speaker"
+        options={speakerList.map(({ id, uniqueNum, name }) => ({
+          key: id,
+          display: `${name} (${uniqueNum})`,
+          value: id,
+        }))}
+        value={speaker}
+        onChange={(speakerId) => {
+          setSpeaker(speakerId);
+          setDialogData({ speaker: speakerId, session });
+        }}
+      />
     </div>
   );
 }

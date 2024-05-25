@@ -1,23 +1,20 @@
-import { getThisWeek, isSameDay } from "../utility";
+import { getThisWeek, isSameDay, timeFormatter } from "../utility";
 
-const timeFormatter = new Intl.DateTimeFormat("en-US", { month: "numeric", day: "2-digit" });
 const dateList = getThisWeek();
 
 function AttendeeSessionTable({ allSessions, selectedUserSessions, user, joinSession }) {
   const tableDateList = dateList.map((d) => [d, d]).flat();
-  console.log({ selectedUserSessions });
   return (
     <>
-      <div>{`${user.name}'s Sessions`}</div>
-      <div className="p-6">
+      <div className="text-xl text-gray-600 font-bold tracking-wide">{`${user.name}'s Sessions`}</div>
+      <div className="p-2 max-w-95 overflow-x-scroll">
         <table className="min-w-full border-collapse border border-gray-200">
           <thead>
             <tr>
               <th className="border border-gray-200 px-4 py-2 bg-gray-100"></th>
               {[...new Array(5)].map((_, index) => (
                 <th key={index} className="border border-gray-200 px-4 py-2 bg-gray-100" colSpan="2">
-                  {/* <div>{`Day ${index + 1} (${timeFormatter.format(dateList[index])})`}</div> */}
-                  <div>{`Day ${index + 1} ${dateList[index]}`}</div>
+                  <div>{`Day ${index + 1} (${timeFormatter.format(dateList[index])})`}</div>
                 </th>
               ))}
             </tr>
@@ -73,7 +70,7 @@ function SessionItem({ sessionList, selectedUserSessions, timeSlot, date, classr
     <div className="flex gap-1">
       <span>{target.title}</span>
       <span>
-        {selectedUserSessions.find(({ sessionId }) => target.id === sessionId) ? (
+        {selectedUserSessions.find(({ id: sessionId }) => target.id === sessionId) ? (
           <Joined />
         ) : (
           <JoinButton disabled={attendeeIsBusy} joinSession={joinSession} sessionId={target.id} />
@@ -98,7 +95,6 @@ function JoinButton({ disabled, joinSession, sessionId }) {
       }`}
       disabled={disabled}
       onClick={() => {
-        console.log("click");
         joinSession(sessionId);
       }}
     >

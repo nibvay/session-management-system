@@ -1,14 +1,18 @@
 export function getThisWeek() {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const mondayDate = new Date(today);
-  mondayDate.setDate(today.getDate() - (dayOfWeek - 1));
+  const daysUntilNextMonday = (8 - dayOfWeek) % 7;
+
+  const nextMondayDate = new Date(today);
+  nextMondayDate.setDate(today.getDate() + daysUntilNextMonday);
+  nextMondayDate.setHours(0, 0, 0, 0); // Align time to 00:00:00
 
   const dates = [];
 
   for (let i = 0; i < 5; i++) {
-    const date = new Date(mondayDate);
-    date.setDate(mondayDate.getDate() + i);
+    const date = new Date(nextMondayDate);
+    date.setDate(nextMondayDate.getDate() + i);
+    date.setHours(0, 0, 0, 0); // Align time to 00:00:00
     dates.push(date.getTime());
   }
 
@@ -41,3 +45,5 @@ export function generateFakeSessions(count) {
     };
   });
 }
+
+export const timeFormatter = new Intl.DateTimeFormat("en-US", { month: "numeric", day: "2-digit" });

@@ -3,27 +3,7 @@ import http from "../http";
 import { useDialog } from "../provider/DialogProvider";
 import AttendeeSessionTable from "./AttendeeSessionTable";
 
-function AddAttendeeDialog({ setDialogData }) {
-  const [name, setName] = useState("");
-  return (
-    <div className="block">
-      <label className="pr-1 text-sm font-medium text-gray-700">Name</label>
-      <input
-        className="mr-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-        type="text"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => {
-          setName(e.target.value);
-          setDialogData({ name: e.target.value });
-        }}
-      />
-    </div>
-  );
-}
-
 function Attendees() {
-  const [isLoading, setIsLoading] = useState(false);
   const [attendeeList, setAttendeeList] = useState([]);
   const [allSessions, setAllSessions] = useState(null);
   const [selectedUserSessions, setSelectedUserSessions] = useState(null);
@@ -32,19 +12,23 @@ function Attendees() {
   const { openDialog, setDialogData } = useDialog();
 
   const addAttendee = () => {
-    openDialog("Add Attendee", <AddAttendeeDialog setDialogData={setDialogData} />, async (dialogData) => {
-      console.log({ dialogData });
-      await http.addAttendee(dialogData);
-      const attendees = await http.getAttendees();
-      setAttendeeList(attendees);
+    openDialog("Add Attendee", <AddAttendeeDialog setDialogData={setDialogData} />, async ({ name }) => {
+      if (!name || name.length === 0) {
+        console.log("error name");
+        return "error";
+      } else {
+        await http.addAttendee({ name });
+        const { data: attendees } = await http.getAttendees();
+        setAttendeeList(attendees);
+      }
     });
   };
 
   const viewSessionByAttendee = async (attendeeId) => {
-    const userSessions = await http.getSessionsByAttendee(attendeeId);
+    const { data: userSessions } = await http.getSessionsByAttendee(attendeeId);
 
     if (!allSessions) {
-      const all = await http.getSessions();
+      const { data: all } = await http.getSessions();
       console.log(all);
       setAllSessions(all);
     }
@@ -55,17 +39,15 @@ function Attendees() {
 
   const joinSession = async (sessionId) => {
     await http.joinSession({ sessionId, attendeeId: selectedUserId });
-    const userSessions = await http.getSessionsByAttendee(selectedUserId);
+    const { data: userSessions } = await http.getSessionsByAttendee(selectedUserId);
     console.log("join", { sessionId, userSessions });
     setSelectedUserSessions(userSessions);
   };
 
   useEffect(() => {
     async function fetchData() {
-      setIsLoading(true);
-      const attendees = await http.getAttendees();
+      const { data: attendees } = await http.getAttendees();
       setAttendeeList(attendees);
-      setIsLoading(false);
     }
     fetchData();
   }, []);
@@ -73,7 +55,7 @@ function Attendees() {
   console.log({ allSessions, selectedUserSessions, selectedUserId });
   return (
     <div>
-      <div className="text-lg">Attendees</div>
+      <div className="text-2xl text-gray-800 font-bold pb-2 mb-4 tracking-wide">Attendees</div>
       <div className="flex flex-row-reverse px-2">
         <button
           onClick={addAttendee}
@@ -113,35 +95,43 @@ function Attendees() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {attendeeList.map(({ id, uniqueNum, name }) => (
-                <tr key={uniqueNum}>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{uniqueNum}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{name}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    <div
-                      className="cursor-pointer inline-block"
-                      onClick={async () => {
-                        await viewSessionByAttendee(id);
-                      }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="size-6"
+              {attendeeList.length > 0 ? (
+                attendeeList.map(({ id, uniqueNum, name }) => (
+                  <tr key={uniqueNum}>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{uniqueNum}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{name}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      <div
+                        className="cursor-pointer inline-block"
+                        onClick={async () => {
+                          await viewSessionByAttendee(id);
+                        }}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
-                        />
-                      </svg>
-                    </div>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="size-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+                          />
+                        </svg>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="px-4 py-3 text-center text-sm text-gray-500">
+                    No attendee
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -154,6 +144,30 @@ function Attendees() {
           joinSession={joinSession}
         />
       )}
+    </div>
+  );
+}
+
+function AddAttendeeDialog({ setDialogData }) {
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    setDialogData({ name: "" });
+  }, []);
+
+  return (
+    <div className="block">
+      <label className="pr-1 text-sm font-medium text-gray-700">Name</label>
+      <input
+        className="mr-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+          setDialogData({ name: e.target.value });
+        }}
+      />
     </div>
   );
 }

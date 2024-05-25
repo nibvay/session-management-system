@@ -3,6 +3,9 @@ export default {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {},
+    maxWidth: {
+      95: "95%",
+    },
   },
   plugins: [],
 };
